@@ -40,3 +40,7 @@ export const mostSimilarLanguage = (targetLanguage: string, availableLanguages: 
 
 export const isWebSpeech = (provider: string) => provider.toLowerCase() === 'webspeech';
 export const isGladia = (provider: string) => provider.toLowerCase() === 'gladia';
+
+// Providers that support translating captions to a view language different
+// from the spoken one. Only Gladia does today; extend this as others gain it.
+export const isTranslationEnabled = (provider: string) => isGladia(provider);

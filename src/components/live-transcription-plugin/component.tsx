@@ -19,7 +19,7 @@ import { StartedLiveTranscription } from '../started-live-transcription/componen
 import useEnableTranscription from '../../hooks/useEnableTranscription';
 import { useWebspeechSupportBroadcast } from '../../hooks/useWebspeechSupportBroadcast';
 import { pluginLogger } from '../..';
-import { isGladia, mostSimilarLanguage } from '../../service';
+import { isTranslationEnabled, mostSimilarLanguage } from '../../service';
 import { IconSVG } from '../icon/component';
 
 const intlMessages = defineMessages({
@@ -96,7 +96,7 @@ export function LiveTranscriptionPlugin(
       sidekickPanel = new GenericContentSidekickArea({
         id: `live-transcription-${uuid}`,
         name: intl.formatMessage(
-          isGladia(provider)
+          isTranslationEnabled(provider)
             ? intlMessages.sidekickButtonTitleTranslation
             : intlMessages.sidekickButtonTitle,
         ),
@@ -129,7 +129,7 @@ export function LiveTranscriptionPlugin(
       sidekickPanel = new GenericContentSidekickArea({
         id: `live-transcription-${uuid}`,
         name: intl.formatMessage(
-          isGladia(provider)
+          isTranslationEnabled(provider)
             ? intlMessages.sidekickButtonTitleTranslation
             : intlMessages.sidekickButtonTitle,
         ),
@@ -137,7 +137,7 @@ export function LiveTranscriptionPlugin(
           svgContent: <IconSVG />,
         },
         section: intl.formatMessage(intlMessages.sidekickSectionName),
-        open: true,
+        open: false,
         contentFunction: (element: HTMLElement) => {
           const root = ReactDOM.createRoot(element);
           root.render(
@@ -157,7 +157,9 @@ export function LiveTranscriptionPlugin(
         },
       });
     }
-    if (sidekickPanel) pluginApi.setGenericContentItems([sidekickPanel]);
+    // Always sync, even to an empty array: a viewer whose session just
+    // stopped has no sidekickPanel here, and that's what closes their panel.
+    pluginApi.setGenericContentItems(sidekickPanel ? [sidekickPanel] : []);
     // activeLocale is intentionally excluded: it only needs to seed the
     // initial locale of a freshly (re)created panel. Once transcription has
     // started, each user manages their own spoken/view locale locally, so

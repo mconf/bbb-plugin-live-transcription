@@ -11,7 +11,8 @@ import {
   BBButton,
   BBBTypography,
   BBBHint,
-} from '@mconf/bbb-ui-components-react';
+  BBBDivider,
+} from '@bigbluebutton/bbb-ui-components-react';
 import { DataChannelTypes, PluginApi } from 'bigbluebutton-html-plugin-sdk';
 import * as Styled from './styles';
 import { DataChannelResponse } from '../types';
@@ -25,7 +26,9 @@ import {
   usePrivacyPolicyUrl,
   useSpeechProvider,
 } from '../../context/settings/context';
-import { LIVE_TRANSCRIPTION_DATA_CHANNEL_NAME, pluginLogger } from '../../index';
+import {
+  LIVE_TRANSCRIPTION_DATA_CHANNEL_NAME, TRANSCRIPTION_SESSION_STATE, pluginLogger,
+} from '../../index';
 
 function IllustrationSVG(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -84,11 +87,6 @@ const intlMessages = defineMessages({
     description: 'Title of the live transcription panel',
     defaultMessage: 'Transcribe your meeting in real time',
   },
-  titleTranslation: {
-    id: 'panel.content.title.translation',
-    description: 'Title of the live transcription panel when translation is supported',
-    defaultMessage: 'Transcribe and translate your meeting in real time',
-  },
   description: {
     id: 'panel.content.description',
     description: 'Description of the live transcription panel',
@@ -124,16 +122,6 @@ const intlMessages = defineMessages({
     description: 'Label for the auto-detect option in the locale selector',
     defaultMessage: 'Auto-detect',
   },
-  translationHintTitle: {
-    id: 'panel.content.translationHint.title',
-    description: 'Title of the hint about real-time translation availability',
-    defaultMessage: 'Real-time translation available!',
-  },
-  translationHintLabel: {
-    id: 'panel.content.translationHint.label',
-    description: 'Description of the hint about real-time translation availability',
-    defaultMessage: 'After starting, you can choose a display language to follow the transcription translated in real time.',
-  },
   unsupportedUsersHintLabel: {
     id: 'panel.content.unsupportedUsers.hint.label',
     description: 'Label for hint showing users without webspeech support',
@@ -153,7 +141,6 @@ export function LiveTranscriptionPanel({
   const privacyPolicyUrl = usePrivacyPolicyUrl();
   const provider = useSpeechProvider();
   const [selectedLocale, setSelectedLocale] = useState<string>(isGladia(provider) ? 'auto' : initialLocale ?? '');
-  const [hintClosed, setHintClosed] = useState(false);
 
   const {
     pushEntry: dataChannelPushEntry,
@@ -172,7 +159,7 @@ export function LiveTranscriptionPanel({
       logCode: 'plg_started',
     }, `Plugin started: ${pluginApi.pluginName}`);
     setStarted(true);
-    dataChannelPushEntry({ state: 'started', locale: selectedLocale });
+    dataChannelPushEntry({ state: TRANSCRIPTION_SESSION_STATE.STARTED, locale: selectedLocale });
   }, [selectedLocale, dataChannelPushEntry, provider]);
 
   if (started) {
@@ -199,13 +186,11 @@ export function LiveTranscriptionPanel({
           </Styled.IllustrationWrapper>
 
           <BBBTypography variant="header">
-            {isGladia(provider)
-              ? intl.formatMessage(intlMessages.titleTranslation)
-              : intl.formatMessage(intlMessages.title)}
+            {intl.formatMessage(intlMessages.title)}
           </BBBTypography>
         </div>
 
-        <BBBTypography variant="text2">
+        <Styled.PanelDescription variant="text2">
           {intl.formatMessage(intlMessages.description, {
             termsLink: (chunks: React.ReactNode) => (
               <ExternalLink href={termsOfUseUrl}>{chunks}</ExternalLink>
@@ -214,8 +199,10 @@ export function LiveTranscriptionPanel({
               <ExternalLink href={privacyPolicyUrl}>{chunks}</ExternalLink>
             ),
           })}
-        </BBBTypography>
+        </Styled.PanelDescription>
       </Styled.Content>
+
+      <BBBDivider />
 
       <Styled.Footer>
         {isWebSpeech(provider) && unsupportedWebspeechUsers.length > 0 && (
@@ -231,13 +218,6 @@ export function LiveTranscriptionPanel({
               ))}
             </Styled.UnsupportedUsersList>
           </BBBHint>
-        )}
-        {isGladia(provider) && !hintClosed && (
-          <BBBHint
-            title={intl.formatMessage(intlMessages.translationHintTitle)}
-            label={intl.formatMessage(intlMessages.translationHintLabel)}
-            onRequestClose={() => setHintClosed(true)}
-          />
         )}
         {enabledLocales && enabledLocales.length > 0 && (
           <BBBSelect

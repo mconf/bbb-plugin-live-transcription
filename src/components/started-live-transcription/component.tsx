@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {
-  ReactNode, useEffect, useLayoutEffect, useRef, useState, useCallback,
+  ReactNode, useEffect, useRef, useState, useCallback,
 } from 'react';
 import { IntlShape, defineMessages } from 'react-intl';
 import { PluginApi, CaptionsLanguageEnum } from 'bigbluebutton-html-plugin-sdk';
@@ -9,21 +9,23 @@ import {
   ContentCopy as MDContentCopyIcon,
   OpenInNew as MDOpenInNewIcon,
   OpenInNewOff as MdOpenInNewOffIcon,
-  Edit as MDEditIcon,
+  CheckCircleOutline as MDCheckCircleOutlineIcon,
 } from '@mui/icons-material';
 import { MenuItem } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import {
-  BBBTypography, BBButton, BBBToggle, BBBAccordion, BBBSelect, BBBHint,
-} from '@mconf/bbb-ui-components-react';
+  BBButton, BBBToggle, BBBAccordion, BBBSelect, BBBHint,
+  BBBDivider,
+} from '@bigbluebutton/bbb-ui-components-react';
 import * as Styled from './styles';
 import { CaptionActiveLocaleGraphqlResponse, SetSpeechLocaleMutation, CaptionLocaleGraphqlResponse } from '../types';
 import { GET_CAPTION_ACTIVE_LOCALES, GET_CURRENT_CAPTION_LOCALE, SET_SPEECH_LOCALE } from '../queries';
 
 import {
-  getLocaleName, isGladia, mostSimilarLanguage, isWebSpeech,
+  getLocaleName, isGladia, mostSimilarLanguage, isWebSpeech, isTranslationEnabled,
 } from '../../service';
 import { hasSpeechRecognitionSupport } from '../../hooks/service';
+import { useIsModerator } from '../../hooks/useIsModerator';
 import {
   FloatingCaptionsWindow,
   FloatingCaptionsEntry,
@@ -33,8 +35,6 @@ import {
 import {
   DEFAULT_FONT_SETTINGS,
   DEFAULT_SPLIT_SETTINGS,
-  FONT_OPTIONS,
-  OUTLINE_STYLE_OPTIONS,
 } from '../../constants';
 import { pluginLogger } from '../../index';
 import { useLiveTranscriptionStore } from '../../context';
@@ -73,6 +73,16 @@ const intlMessages = defineMessages({
     description: 'Label for the button that copies the caption history to clipboard',
     defaultMessage: 'Copy',
   },
+  clearedFeedbackLabel: {
+    id: 'sidekick.panel.clearButton.feedback',
+    description: 'Feedback shown briefly on the clear button after it is clicked',
+    defaultMessage: 'Cleared',
+  },
+  copiedFeedbackLabel: {
+    id: 'sidekick.panel.copyButton.feedback',
+    description: 'Feedback shown briefly on the copy button after it is clicked',
+    defaultMessage: 'Copied',
+  },
   floatButtonOpen: {
     id: 'sidekick.panel.floatButton.open',
     description: 'Label for the floating captions button when window is closed',
@@ -83,105 +93,15 @@ const intlMessages = defineMessages({
     description: 'Label for the floating captions button when window is open',
     defaultMessage: 'Close Float',
   },
-  settingsLabel: {
-    id: 'sidekick.panel.settings.label',
-    description: 'Label for the caption style settings button',
-    defaultMessage: 'Configurações da janela destacada',
+  transcriptionSettingsLabel: {
+    id: 'sidekick.panel.transcriptionSettings.label',
+    description: 'Title of the accordion holding transcription language settings',
+    defaultMessage: 'Transcription settings',
   },
-  fontSizeLabel: {
-    id: 'sidekick.panel.fontSettings.size',
-    description: 'Label for font size setting',
-    defaultMessage: 'Size',
-  },
-  fontWeightLabel: {
-    id: 'sidekick.panel.fontSettings.weight',
-    description: 'Label for font weight setting',
-    defaultMessage: 'Bold',
-  },
-  fontColorLabel: {
-    id: 'sidekick.panel.fontSettings.color',
-    description: 'Label for font color setting',
-    defaultMessage: 'Color',
-  },
-  showUserNameLabel: {
-    id: 'sidekick.panel.fontSettings.showUserName',
-    description: 'Label for show/hide user name setting',
-    defaultMessage: 'Show',
-  },
-  fontFamilyLabel: {
-    id: 'sidekick.panel.fontSettings.fontFamily',
-    description: 'Label for font family setting',
-    defaultMessage: 'Family',
-  },
-  userNameColorLabel: {
-    id: 'sidekick.panel.fontSettings.userNameColor',
-    description: 'Label for user name color setting',
-    defaultMessage: 'Color',
-  },
-  userNameBoldLabel: {
-    id: 'sidekick.panel.fontSettings.userNameBold',
-    description: 'Label for user name bold setting',
-    defaultMessage: 'Name bold',
-  },
-  outlineColorLabel: {
-    id: 'sidekick.panel.fontSettings.outlineColor',
-    description: 'Label for text outline color setting',
-    defaultMessage: 'Color',
-  },
-  outlineStyleLabel: {
-    id: 'sidekick.panel.fontSettings.outlineStyle',
-    description: 'Label for text outline style setting',
-    defaultMessage: 'Type',
-  },
-  outlineSizeLabel: {
-    id: 'sidekick.panel.fontSettings.outlineSize',
-    description: 'Label for text outline size setting',
-    defaultMessage: 'Size',
-  },
-  lineLimitLabel: {
-    id: 'sidekick.panel.fontSettings.lineLimit',
-    description: 'Label for characters per line setting',
-    defaultMessage: 'Chars per line',
-  },
-  linesPerMessageLabel: {
-    id: 'sidekick.panel.fontSettings.linesPerMessage',
-    description: 'Label for lines per caption setting',
-    defaultMessage: 'Lines per caption',
-  },
-  fontSettingsTooltipLabel: {
-    id: 'sidekick.panel.fontSettings.tooltip',
-    description: 'Tooltip explaining settings apply only to the floating captions window',
-    defaultMessage: 'These settings apply only to the floating captions window',
-  },
-  backgroundColorLabel: {
-    id: 'sidekick.panel.fontSettings.backgroundColor',
-    description: 'Label for background color setting of the floating captions window',
-    defaultMessage: 'Color',
-  },
-  sectionFontLabel: {
-    id: 'sidekick.panel.fontSettings.section.font',
-    description: 'Section header for font settings',
-    defaultMessage: 'Font',
-  },
-  sectionOutlineLabel: {
-    id: 'sidekick.panel.fontSettings.section.outline',
-    description: 'Section header for outline settings',
-    defaultMessage: 'Outline',
-  },
-  sectionBackgroundLabel: {
-    id: 'sidekick.panel.fontSettings.section.background',
-    description: 'Section header for background settings',
-    defaultMessage: 'Background',
-  },
-  sectionShowNameLabel: {
-    id: 'sidekick.panel.fontSettings.section.showName',
-    description: 'Section header for show name settings',
-    defaultMessage: 'Name',
-  },
-  sectionLayoutLabel: {
-    id: 'sidekick.panel.fontSettings.section.layout',
-    description: 'Section header for layout settings',
-    defaultMessage: 'Layout',
+  showCaptionsToggleLabel: {
+    id: 'sidekick.panel.showCaptionsToggle.label',
+    description: 'Label for the toggle that shows captions over the media area',
+    defaultMessage: 'Show captions',
   },
   unsupportedHintLabel: {
     id: 'live_transcription.banner.unsupported',
@@ -204,6 +124,7 @@ export function StartedLiveTranscription({
   } = useLiveTranscriptionStore((s) => s);
   const enabledLocales = useEnabledLocales();
   const provider = useSpeechProvider();
+  const isMod = useIsModerator(pluginApi);
   const [floatingOpen, setFloatingOpen] = useState(false);
   const [activeFloatingEntries, setActiveFloatingEntries] = useState<FloatingCaptionsEntry[]>([]);
   const [fontSettings, setFontSettings] = useState<
@@ -232,12 +153,6 @@ export function StartedLiveTranscription({
   useEffect(() => {
     setSeenViewLocales((prev) => (prev.includes(viewLocale) ? prev : [...prev, viewLocale]));
   }, [viewLocale]);
-  // Force a re-render after DOM commit so BBBAccordion re-measures its content
-  // height when conditional rows (showUserName, outlineStyle) are toggled.
-  const [, setAccordionTick] = useState(0);
-  useLayoutEffect(() => {
-    setAccordionTick((n) => n + 1);
-  }, [fontSettings.showUserName, fontSettings.outlineStyle]);
 
   const [setSpeechLocale] = pluginApi.useCustomMutation!<
     SetSpeechLocaleMutation>(SET_SPEECH_LOCALE);
@@ -329,7 +244,8 @@ export function StartedLiveTranscription({
     });
   }, [otherLocales, locale, viewLocale]);
 
-  const viewLocaleSelectorVisible = isGladia(provider) && otherLocales.length > 0;
+  const showSpokenLocaleSelector = isTranslationEnabled(provider) || isMod;
+  const viewLocaleSelectorVisible = isTranslationEnabled(provider) && otherLocales.length > 0;
 
   const showUnsupportedHint = isWebSpeech(provider) && !hasSpeechRecognitionSupport();
   const [unsupportedHintClosed, setUnsupportedHintClosed] = useState(false);
@@ -344,61 +260,21 @@ export function StartedLiveTranscription({
       )}
 
       <Styled.HeaderToolbar>
-        <Styled.LocaleSelectorRow>
-          <BBBSelect
-            id="spoken-locale-select"
-            value={spokenLocale}
-            title={intl.formatMessage(intlMessages.spokenLocaleSelectorLabel)}
-            onChange={handleChangeSpokenLocale}
-            fullWidth
-          >
-            {isGladia(provider)
-              && (
-              <MenuItem key="auto" value="auto">
-                {intl.formatMessage(intlMessages.autoDetectLocale)}
-              </MenuItem>
-              )}
-            {enabledLocales.map((l) => (
-              <MenuItem key={l} value={l}>
-                {getLocaleName(l)}
-              </MenuItem>
-            ))}
-          </BBBSelect>
-          {viewLocaleSelectorVisible && (
-            <BBBSelect
-              id="view-locale-select"
-              value={viewLocale}
-              title={intl.formatMessage(intlMessages.viewLocaleSelectorLabel)}
-              onChange={(e) => {
-                setViewLocale(e.target.value as string);
-                setViewLocaleManuallySet(true);
-                if (!isGladia(provider)) {
-                  // When translation is not enabled, lock the spoken locale to
-                  // the view locale to avoid confusion.
-                  setSpokenLocale(e.target.value as string);
-                }
-              }}
-              fullWidth
-            >
-              <MenuItem key={locale} value={locale}>
-                {getLocaleName(locale)}
-              </MenuItem>
-              {otherLocales.map((l) => (
-                <MenuItem key={l} value={l}>
-                  {getLocaleName(l)}
-                </MenuItem>
-              ))}
-            </BBBSelect>
-          )}
-        </Styled.LocaleSelectorRow>
-        <Styled.HeaderToolbarRow>
-          <Styled.HeaderToolbarGroup>
+        {isMod && (
+          <Styled.HeaderToolbarRow>
             <BBButton
               label={intl.formatMessage(intlMessages.clearButtonlabel)}
               iconStart={<MDHistoryIcon style={{ fontSize: '0.85rem' }} />}
               onClick={handleClearCaptions}
               size="sm"
               variant="tertiary"
+              showFeedback
+              feedbackContent={(
+                <>
+                  <MDCheckCircleOutlineIcon style={{ fontSize: '0.85rem' }} />
+                  {intl.formatMessage(intlMessages.clearedFeedbackLabel)}
+                </>
+              )}
             />
             <BBButton
               label={intl.formatMessage(intlMessages.copyButtonLabel)}
@@ -406,13 +282,13 @@ export function StartedLiveTranscription({
               size="sm"
               variant="tertiary"
               onClick={handleCopyCaptions}
-            />
-          </Styled.HeaderToolbarGroup>
-          <Styled.HeaderToolbarGroup>
-            <BBBToggle
-              helperText="Show captions"
-              checked={isViewCaptionsOverTheMediaEnabled}
-              onChange={(_, checked) => setDisplayCaptionsLocale(checked ? viewLocale : '')}
+              showFeedback
+              feedbackContent={(
+                <>
+                  <MDCheckCircleOutlineIcon style={{ fontSize: '0.85rem' }} />
+                  {intl.formatMessage(intlMessages.copiedFeedbackLabel)}
+                </>
+              )}
             />
             <BBButton
               label={intl.formatMessage(floatingOpen
@@ -424,278 +300,86 @@ export function StartedLiveTranscription({
               variant="tertiary"
               onClick={() => setFloatingOpen((prev) => !prev)}
             />
-          </Styled.HeaderToolbarGroup>
-        </Styled.HeaderToolbarRow>
-      </Styled.HeaderToolbar>
-      <BBBAccordion
-        title={intl.formatMessage(intlMessages.settingsLabel)}
-        tooltipLabel={intl.formatMessage(intlMessages.fontSettingsTooltipLabel)}
-        buttonHeader={(
-          <Styled.ButtonHeaderWrapper>
-            <Styled.ButtonHeaderSpacer />
-            <MDEditIcon style={{ fontSize: '0.85rem' }} />
-          </Styled.ButtonHeaderWrapper>
+          </Styled.HeaderToolbarRow>
         )}
-      >
-        <Styled.SettingsPanel>
-
-          <Styled.SettingsSectionHeader>
-            {intl.formatMessage(intlMessages.sectionFontLabel)}
-          </Styled.SettingsSectionHeader>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.fontFamilyLabel)}
-            </Styled.SettingsLabel>
-            <Styled.FontFamilyOptions>
-              {FONT_OPTIONS.map((font) => (
-                <BBButton
-                  key={font.value}
-                  label={font.label}
-                  variant={fontSettings.fontFamily === font.value ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setFontSettings((prev) => ({
-                    ...prev,
-                    fontFamily: font.value,
-                  }))}
-                />
-              ))}
-            </Styled.FontFamilyOptions>
-          </Styled.SettingsRow>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.fontWeightLabel)}
-            </Styled.SettingsLabel>
-            <BBBToggle
-              checked={fontSettings.fontWeight === 'bold'}
-              onChange={(_, checked) => setFontSettings((prev) => ({
-                ...prev,
-                fontWeight: checked ? 'bold' : 'normal',
-              }))}
-            />
-          </Styled.SettingsRow>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.fontSizeLabel)}
-            </Styled.SettingsLabel>
-            <Styled.SettingsRangeWrapper>
-              <input
-                type="range"
-                min={10}
-                max={120}
-                value={fontSettings.fontSize}
-                onChange={(e) => setFontSettings((prev) => ({
-                  ...prev,
-                  fontSize: Number(e.target.value),
-                }))}
-              />
-              <BBBTypography variant="text2">
-                {fontSettings.fontSize}
-                px
-              </BBBTypography>
-            </Styled.SettingsRangeWrapper>
-          </Styled.SettingsRow>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.fontColorLabel)}
-            </Styled.SettingsLabel>
-            <input
-              type="color"
-              value={fontSettings.fontColor}
-              onChange={(e) => setFontSettings((prev) => ({
-                ...prev,
-                fontColor: e.target.value,
-              }))}
-            />
-          </Styled.SettingsRow>
-
-          <Styled.SettingsSectionHeader>
-            {intl.formatMessage(intlMessages.sectionOutlineLabel)}
-          </Styled.SettingsSectionHeader>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.outlineStyleLabel)}
-            </Styled.SettingsLabel>
-            <Styled.FontFamilyOptions>
-              {OUTLINE_STYLE_OPTIONS.map((opt) => (
-                <BBButton
-                  key={opt.value}
-                  label={opt.label}
-                  variant={fontSettings.outlineStyle === opt.value ? 'primary' : 'secondary'}
-                  size="sm"
-                  onClick={() => setFontSettings((prev) => ({
-                    ...prev,
-                    outlineStyle: opt.value,
-                  }))}
-                />
-              ))}
-            </Styled.FontFamilyOptions>
-          </Styled.SettingsRow>
-
-          {fontSettings.outlineStyle !== 'none' && (
-            <>
-              <Styled.SettingsRow>
-                <Styled.SettingsLabel>
-                  {intl.formatMessage(intlMessages.outlineColorLabel)}
-                </Styled.SettingsLabel>
-                <input
-                  type="color"
-                  value={fontSettings.outlineColor}
-                  onChange={(e) => setFontSettings((prev) => ({
-                    ...prev,
-                    outlineColor: e.target.value,
-                  }))}
-                />
-              </Styled.SettingsRow>
-
-              <Styled.SettingsRow>
-                <Styled.SettingsLabel>
-                  {intl.formatMessage(intlMessages.outlineSizeLabel)}
-                </Styled.SettingsLabel>
-                <Styled.SettingsRangeWrapper>
-                  <input
-                    type="range"
-                    min={1}
-                    max={20}
-                    value={fontSettings.outlineSize}
-                    onChange={(e) => setFontSettings((prev) => ({
-                      ...prev,
-                      outlineSize: Number(e.target.value),
-                    }))}
-                  />
-                  <BBBTypography variant="text2">
-                    {fontSettings.outlineSize}
-                    px
-                  </BBBTypography>
-                </Styled.SettingsRangeWrapper>
-              </Styled.SettingsRow>
-            </>
-          )}
-
-          <Styled.SettingsSectionHeader>
-            {intl.formatMessage(intlMessages.sectionBackgroundLabel)}
-          </Styled.SettingsSectionHeader>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.backgroundColorLabel)}
-            </Styled.SettingsLabel>
-            <input
-              type="color"
-              value={fontSettings.backgroundColor}
-              onChange={(e) => setFontSettings((prev) => ({
-                ...prev,
-                backgroundColor: e.target.value,
-              }))}
-            />
-          </Styled.SettingsRow>
-
-          <Styled.SettingsSectionHeader>
-            {intl.formatMessage(intlMessages.sectionShowNameLabel)}
-          </Styled.SettingsSectionHeader>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.showUserNameLabel)}
-            </Styled.SettingsLabel>
-            <BBBToggle
-              checked={fontSettings.showUserName}
-              onChange={(_, checked) => setFontSettings((prev) => ({
-                ...prev,
-                showUserName: checked,
-              }))}
-            />
-          </Styled.SettingsRow>
-
-          {fontSettings.showUserName && (
-            <>
-              <Styled.SettingsRow>
-                <Styled.SettingsLabel>
-                  {intl.formatMessage(intlMessages.userNameColorLabel)}
-                </Styled.SettingsLabel>
-                <input
-                  type="color"
-                  value={fontSettings.userNameColor}
-                  onChange={(e) => setFontSettings((prev) => ({
-                    ...prev,
-                    userNameColor: e.target.value,
-                  }))}
-                />
-              </Styled.SettingsRow>
-
-              <Styled.SettingsRow>
-                <Styled.SettingsLabel>
-                  {intl.formatMessage(intlMessages.userNameBoldLabel)}
-                </Styled.SettingsLabel>
+        <Styled.AccordionRow>
+          <BBBAccordion
+            title={intl.formatMessage(intlMessages.transcriptionSettingsLabel)}
+          >
+            <Styled.SettingsPanel>
+              {/* This empty div is here to make the gap apply a margin to the top of the first
+                row, since gap only applies between rows. */}
+              <div />
+              <Styled.HeaderToolbarRow>
                 <BBBToggle
-                  checked={fontSettings.userNameBold}
-                  onChange={(_, checked) => setFontSettings((prev) => ({
-                    ...prev,
-                    userNameBold: checked,
-                  }))}
+                  helperText={intl.formatMessage(intlMessages.showCaptionsToggleLabel)}
+                  checked={isViewCaptionsOverTheMediaEnabled}
+                  onChange={(_, checked) => setDisplayCaptionsLocale(checked ? viewLocale : '')}
                 />
-              </Styled.SettingsRow>
-            </>
-          )}
-
-          <Styled.SettingsSectionHeader>
-            {intl.formatMessage(intlMessages.sectionLayoutLabel)}
-          </Styled.SettingsSectionHeader>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.lineLimitLabel)}
-            </Styled.SettingsLabel>
-            <Styled.SettingsRangeWrapper>
-              <input
-                type="range"
-                min={20}
-                max={200}
-                value={splitSettings.lineLimit}
-                onChange={(e) => setSplitSettings((prev) => ({
-                  ...prev,
-                  lineLimit: Number(e.target.value),
-                }))}
-              />
-              <BBBTypography variant="text2">
-                {splitSettings.lineLimit}
-              </BBBTypography>
-            </Styled.SettingsRangeWrapper>
-          </Styled.SettingsRow>
-
-          <Styled.SettingsRow>
-            <Styled.SettingsLabel>
-              {intl.formatMessage(intlMessages.linesPerMessageLabel)}
-            </Styled.SettingsLabel>
-            <Styled.SettingsRangeWrapper>
-              <input
-                type="range"
-                min={1}
-                max={10}
-                value={splitSettings.linesPerMessage}
-                onChange={(e) => setSplitSettings((prev) => ({
-                  ...prev,
-                  linesPerMessage: Number(e.target.value),
-                }))}
-              />
-              <BBBTypography variant="text2">
-                {splitSettings.linesPerMessage}
-              </BBBTypography>
-            </Styled.SettingsRangeWrapper>
-          </Styled.SettingsRow>
-
-        </Styled.SettingsPanel>
-      </BBBAccordion>
+              </Styled.HeaderToolbarRow>
+              <Styled.SelectorsRow>
+                {showSpokenLocaleSelector && (
+                  <BBBSelect
+                    id="spoken-locale-select"
+                    value={spokenLocale}
+                    title={intl.formatMessage(intlMessages.spokenLocaleSelectorLabel)}
+                    onChange={handleChangeSpokenLocale}
+                    fullWidth
+                  >
+                    {isGladia(provider)
+                      && (
+                      <MenuItem key="auto" value="auto">
+                        {intl.formatMessage(intlMessages.autoDetectLocale)}
+                      </MenuItem>
+                      )}
+                    {enabledLocales.map((l) => (
+                      <MenuItem key={l} value={l}>
+                        {getLocaleName(l)}
+                      </MenuItem>
+                    ))}
+                  </BBBSelect>
+                )}
+                {viewLocaleSelectorVisible && (
+                  <BBBSelect
+                    id="view-locale-select"
+                    value={viewLocale}
+                    title={intl.formatMessage(intlMessages.viewLocaleSelectorLabel)}
+                    onChange={(e) => {
+                      setViewLocale(e.target.value as string);
+                      setViewLocaleManuallySet(true);
+                      if (!isTranslationEnabled(provider)) {
+                        // When translation is not enabled, lock the spoken locale to
+                        // the view locale to avoid confusion.
+                        setSpokenLocale(e.target.value as string);
+                      }
+                    }}
+                    fullWidth
+                  >
+                    <MenuItem key={locale} value={locale}>
+                      {getLocaleName(locale)}
+                    </MenuItem>
+                    {otherLocales.map((l) => (
+                      <MenuItem key={l} value={l}>
+                        {getLocaleName(l)}
+                      </MenuItem>
+                    ))}
+                  </BBBSelect>
+                )}
+              </Styled.SelectorsRow>
+            </Styled.SettingsPanel>
+          </BBBAccordion>
+        </Styled.AccordionRow>
+      </Styled.HeaderToolbar>
+      <BBBDivider />
       {floatingOpen && (
         <FloatingCaptionsWindow
           captions={activeFloatingEntries}
           locale={locale}
+          intl={intl}
           fontSettings={fontSettings}
+          onFontSettingsChange={setFontSettings}
           splitSettings={splitSettings}
+          onSplitSettingsChange={setSplitSettings}
           onClose={() => setFloatingOpen(false)}
         />
       )}

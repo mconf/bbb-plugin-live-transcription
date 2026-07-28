@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { defineMessages, IntlShape } from 'react-intl';
-import { BBBTypography } from '@mconf/bbb-ui-components-react';
+import { BBBTypography } from '@bigbluebutton/bbb-ui-components-react';
 import { IconSVG as EmptyStateIconSVG } from '../icon/component';
 import * as Styled from './styles';
 

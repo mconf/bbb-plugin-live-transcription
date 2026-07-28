@@ -35,6 +35,7 @@ export interface CaptionGraphqlResult {
       color: string;
       name: string;
       presenter: boolean;
+      isModerator: boolean;
     }
     captionText: string;
     captionId: string;
@@ -50,6 +51,7 @@ export interface LiveCaptionGraphqlResult {
       color: string;
       name: string;
       presenter: boolean;
+      isModerator: boolean;
     }
     captionText: string;
     captionId: string;

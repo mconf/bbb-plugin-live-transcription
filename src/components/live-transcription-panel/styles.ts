@@ -1,9 +1,11 @@
 import styled from 'styled-components';
+import { BBBTypography } from '@bigbluebutton/bbb-ui-components-react';
 import {
   space2,
   space3,
   space4,
   space6,
+  space12,
   colorPrimary,
   colorTextDefault,
   colorGrayLight,
@@ -13,7 +15,6 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: ${space6};
 `;
 
 export const Content = styled.div`
@@ -22,7 +23,7 @@ export const Content = styled.div`
   flex: 1;
   align-items: center;
   text-align: center;
-  padding: ${space6};
+  padding: ${space12};
   gap: ${space2};
 `;
 
@@ -33,7 +34,8 @@ export const IllustrationWrapper = styled.div`
 export const Footer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${space4};
+  gap: ${space6};
+  padding: ${space6};
   width: 100%;
 `;
 
@@ -86,4 +88,8 @@ export const InlineLink = styled.a`
   font-weight: 600;
   padding: 0;
   text-decoration: underline;
+`;
+
+export const PanelDescription = styled(BBBTypography)`
+  font-size: 1rem;
 `;

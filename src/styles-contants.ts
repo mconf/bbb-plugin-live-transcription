@@ -6,7 +6,7 @@ import {
   colorTextDefault,
   colorWhite,
   colorHoverDark,
-} from '@mconf/bbb-ui-components-react';
+} from '@bigbluebutton/bbb-ui-components-react';
 
 export const smallOnly = 'only screen and (max-width: 40em)';
 export const fontSizeSmMd = '0.85rem'; // aprox 12px
@@ -19,6 +19,7 @@ export const space5 = '1.25rem'; // aprox 20px
 export const space6 = '1.5rem'; // aprox 24px
 export const space7 = '1.75rem'; // aprox 28px
 export const space8 = '2rem'; // aprox 32px
+export const space12 = '3rem'; // aprox 48px
 export const colorPrimary = 'var(--color-primary, #0F70D7)';
 export const colorGrayDark = 'var(--color-gray-dark, #06172A)';
 export const colorGrayLight = 'var(--color-gray-light, #8B9AA8)';

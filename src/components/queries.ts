@@ -20,6 +20,7 @@ const CAPTION_HISTORY_FIELDS = `
     color
     name
     presenter
+    isModerator
   }
   captionText
   captionId

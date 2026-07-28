@@ -1,9 +1,10 @@
 import styled from 'styled-components';
+import { BBBHint } from '@bigbluebutton/bbb-ui-components-react';
 import {
   colorWhite,
-  colorNeutral4,
   space1,
   space2,
+  space3,
   space4,
   space6,
   fontSizeSmMd,
@@ -100,8 +101,7 @@ export const HeaderToolbar = styled.div`
   padding: ${space2} ${space6};
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid ${colorNeutral4};
-  gap: ${space2};
+  gap: ${space4};
   overflow: visible;
 `;
 
@@ -111,13 +111,12 @@ export const HeaderToolbarRow = styled.div`
   justify-content: space-between;
   align-items: center;
   gap: ${space2};
+  width: 100%;
 `;
 
-export const HeaderToolbarGroup = styled.div`
+export const AccordionRow = styled.div`
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: ${space4};
+  flex-direction: column;
 `;
 
 export const ScrollAreaWrapper = styled.div`
@@ -128,6 +127,17 @@ export const ScrollAreaWrapper = styled.div`
   flex-direction: column;
 `;
 
+export const LiveIndicator = styled(BBBHint)`
+  flex-shrink: 0;
+  margin-bottom: ${space2};
+  padding: ${space2} ${space3};
+  gap: ${space2};
+
+  label {
+    color: ${colorPrimary};
+  }
+`;
+
 export const LocalePanel = styled.div<{ $active: boolean }>`
   display: ${({ $active }) => ($active ? 'flex' : 'none')};
   flex-direction: column;
@@ -135,78 +145,7 @@ export const LocalePanel = styled.div<{ $active: boolean }>`
   min-height: 0;
 `;
 
-export const SettingsPanel = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 0 .6rem 0;
-  padding-bottom: .5rem;
-  max-height: 55vh;
-  overflow-y: auto;
-`;
-
-export const SettingsSectionHeader = styled.div`
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #9ca3af;
-  padding-top: 0.5rem;
-  border-top: 1px solid #f3f4f6;
-  margin-top: 0.25rem;
-
-  &:first-child {
-    padding-top: 0;
-    border-top: none;
-    margin-top: 0;
-  }
-`;
-
-export const SettingsDivider = styled.hr`
-  border: none;
-  border-top: 1px solid #e5e7eb;
-  margin: 2px 0;
-`;
-
-export const SettingsRow = styled.div`
-  display: flex;
-  align-items: center;
-  margin-inline-start: 1rem;
-  gap: 10px;
-`;
-
-export const SettingsLabel = styled.label`
-  font-size: 13px;
-  color: #374151;
-  width: 80px;
-  flex-shrink: 0;
-`;
-
-export const SettingsRangeWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-
-  input[type='range'] {
-    flex-grow: 0.5;
-  }
-`;
-
-export const FontFamilyOptions = styled.div`
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-`;
-
-export const ButtonHeaderWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  flex-grow: 1;
-  color: ${colorPrimary};
-`;
-
-export const LocaleSelectorRow = styled.div`
+export const SelectorsRow = styled.div`
   display: flex;
   flex-direction: row;
   gap: ${space2};
@@ -217,6 +156,24 @@ export const LocaleSelectorRow = styled.div`
   }
 `;
 
-export const ButtonHeaderSpacer = styled.div`
-  flex: 1;
+export const SettingsPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0 .6rem 0;
+  padding-bottom: .5rem;
+  max-height: 55vh;
+  overflow-y: auto;
+`;
+
+export const SessionControlsRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  gap: ${space2};
+  padding: ${space1};
+
+  & > * {
+    flex: 1;
+  }
 `;

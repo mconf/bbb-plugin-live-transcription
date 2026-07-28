@@ -7,6 +7,15 @@ import { SettingsProvider } from './context/settings/context';
 export const LIVE_TRANSCRIPTION_DATA_CHANNEL_NAME = 'LIVE_TRANSCRIPTION_CHANNEL';
 export const WEBSPEECH_SUPPORT_DATA_CHANNEL_NAME = 'WEBSPEECH_SUPPORT_CHANNEL';
 
+// Values broadcast on LIVE_TRANSCRIPTION_CHANNEL to drive the session for
+// every participant: STARTED actively listens, PAUSED keeps the panel open
+// but stops listening until resumed, STOPPED ends the session entirely.
+export const TRANSCRIPTION_SESSION_STATE = {
+  STARTED: 'started',
+  PAUSED: 'paused',
+  STOPPED: 'stopped',
+} as const;
+
 const uuid = document.currentScript?.getAttribute('uuid') || 'root';
 const pluginRoot = document.getElementById(uuid);
 

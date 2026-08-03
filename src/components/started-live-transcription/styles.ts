@@ -87,6 +87,14 @@ export const Timestamp = styled.span<{ $hidden?: boolean }>`
   visibility: ${({ $hidden }) => ($hidden ? 'hidden' : 'visible')};
 `;
 
+export const ScrollAreaContainer = styled.div`
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+`;
+
 export const ScrollButton = styled.div`
   position: absolute;
   left: 50%;

@@ -205,35 +205,37 @@ function TranscriptionVisualizer({
               icon={<IconSVG width={16} height={16} />}
             />
           )}
-          <Styled.ScrollArea ref={containerRef} onScroll={handleScroll}>
-            <Styled.ScrollAreaSpacer />
-            {captions?.caption_history?.map((c, i) => {
-              const showHeader = groupHeaders[i];
-              return (
-                <Styled.CaptionRow key={c.captionId} $continuation={!showHeader}>
-                  <Styled.Timestamp $hidden={!showHeader}>
-                    <BBBTypography variant="text2">
-                      {intl.formatTime(c.createdAt)}
-                    </BBBTypography>
-                  </Styled.Timestamp>
-                  <Styled.CaptionContent>
-                    {showHeader && <Username intl={intl} user={c.user} />}
-                    <BBBTypography>{c.captionText}</BBBTypography>
-                  </Styled.CaptionContent>
-                </Styled.CaptionRow>
-              );
-            })}
-          </Styled.ScrollArea>
-          {!isAtBottom && (
-            <Styled.ScrollButton>
-              <BBButton
-                label={intl.formatMessage(intlMessages.scrollButtonLabel)}
-                variant="primary"
-                size="sm"
-                onClick={scrollToBottom}
-              />
-            </Styled.ScrollButton>
-          )}
+          <Styled.ScrollAreaContainer>
+            <Styled.ScrollArea ref={containerRef} onScroll={handleScroll}>
+              <Styled.ScrollAreaSpacer />
+              {captions?.caption_history?.map((c, i) => {
+                const showHeader = groupHeaders[i];
+                return (
+                  <Styled.CaptionRow key={c.captionId} $continuation={!showHeader}>
+                    <Styled.Timestamp $hidden={!showHeader}>
+                      <BBBTypography variant="text2">
+                        {intl.formatTime(c.createdAt)}
+                      </BBBTypography>
+                    </Styled.Timestamp>
+                    <Styled.CaptionContent>
+                      {showHeader && <Username intl={intl} user={c.user} />}
+                      <BBBTypography>{c.captionText}</BBBTypography>
+                    </Styled.CaptionContent>
+                  </Styled.CaptionRow>
+                );
+              })}
+            </Styled.ScrollArea>
+            {!isAtBottom && (
+              <Styled.ScrollButton>
+                <BBButton
+                  label={intl.formatMessage(intlMessages.scrollButtonLabel)}
+                  variant="primary"
+                  size="sm"
+                  onClick={scrollToBottom}
+                />
+              </Styled.ScrollButton>
+            )}
+          </Styled.ScrollAreaContainer>
         </>
       )}
       {isMod && (
